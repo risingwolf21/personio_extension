@@ -1,0 +1,14 @@
+{
+    "name": "Personio Extension",
+    "description": "Calculate weekly hours in Personio",
+    "icons": [
+        {
+            "src": "images/icon.png",
+            "sizes": "192x192"
+        }
+    ],
+    "action": {
+        "default_popup": "index.html",
+        "default_title": "Personio weekly report"
+    }
+}
