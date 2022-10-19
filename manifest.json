@@ -7,6 +7,12 @@
             "sizes": "192x192"
         }
     ],
+    "content_scripts": [
+        {
+          "matches": ["https://itscope-gmbh.personio.de/attendance/employee/*"],
+          "js": ["jquery.js", "content-script.js"]
+        }
+    ],
     "action": {
         "default_popup": "index.html",
         "default_title": "Personio weekly report"
