@@ -54,13 +54,13 @@ calculateWorkAndBreaksFor = (dates) => {
     for (let i = 0; i < dates.length; i++) {
         var item = dates[i];
         if (!item) {
-            dictionary[stringDates[i]] = { "work": 0, "break": 0 };
+            dictionary[dates[i]] = { "work": 0, "break": 0 };
             continue;
         } else if (!item.includes("+")) {
-            dictionary[stringDates[i]] = calculateWork(item);
+            dictionary[dates[i]] = calculateWork(item);
             continue;
         } else {
-            dictionary[stringDates[i]] = calculateWorkAndBreak(item);
+            dictionary[dates[i]] = calculateWorkAndBreak(item);
         }
     }
     return dictionary;
@@ -84,6 +84,10 @@ mapMilliSecondsToHoursAndMinutes = (sum) => {
     return { "hours": hours, "minutes": minutes, "seconds": seconds };
 }
 
+while(!$('div[data-test-id=today-cell]').find('span[data-test-id="day-summary"]').first()){
+    setTimeout(1000);
+}
+
 var dateArray = getDatesInWeek(new Date());
 
 var times = loadContentWith(dateArray);
@@ -95,5 +99,8 @@ var totals = calculateTotalWorkAndBreak(dictionary);
 var workingTime = mapMilliSecondsToHoursAndMinutes(totals.work);
 var breakTime = mapMilliSecondsToHoursAndMinutes(totals.break);
 
-console.log("Worked this week for: " + workingTime)
-console.log("Break this week for: " + breakTime)
+console.log("Worked this week for: ")
+console.log(workingTime)
+console.log("Break this week for: ")
+console.log(breakTime)
+
