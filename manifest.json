@@ -1,18 +1,26 @@
 {
     "name": "Personio Extension",
-    "description": "Calculate weekly hours in Personio", 
+    "description": "Calculate weekly hours in Personio",
     "content_scripts": [
         {
-          "matches": ["https://itscope-gmbh.personio.de/attendance/employee/*"],
-          "js": ["jquery.js", "content-script.js"],
-          "run_at": "document_end"
+            "matches": [
+                "https://itscope-gmbh.personio.de/attendance/employee/*"
+            ],
+            "js": [
+                "jquery.js",
+                "content-script.js"
+            ],
+            "run_at": "document_end"
         }
     ],
-    "permissions": ["webNavigation"],
-    "action": {
-        "default_popup": "index.html",
-        "default_title": "Personio weekly report"
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
     },
+    "permissions": [
+        "webNavigation"
+    ],
     "manifest_version": 2,
     "version": "1.1"
 }

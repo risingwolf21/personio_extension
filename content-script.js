@@ -84,23 +84,30 @@ mapMilliSecondsToHoursAndMinutes = (sum) => {
     return { "hours": hours, "minutes": minutes, "seconds": seconds };
 }
 
-while(!$('div[data-test-id=today-cell]').find('span[data-test-id="day-summary"]').first()){
-    setTimeout(1000);
+doSomething = () => {
+    var dateArray = getDatesInWeek(new Date());
+
+    var times = loadContentWith(dateArray);
+
+    var dictionary = calculateWorkAndBreaksFor(times);
+
+    var totals = calculateTotalWorkAndBreak(dictionary);
+
+    var workingTime = mapMilliSecondsToHoursAndMinutes(totals.work);
+    var breakTime = mapMilliSecondsToHoursAndMinutes(totals.break);
+
+    console.log("Worked this week for: ");
+    console.log(workingTime);
+    console.log("Break this week for: ");
+    console.log(breakTime);
+
+    alert("test");
 }
 
-var dateArray = getDatesInWeek(new Date());
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if(request.action == "start"){
+        document.addEventListener('DOMContentLoaded', doSomething, false);
+    }
+});
 
-var times = loadContentWith(dateArray);
-
-var dictionary = calculateWorkAndBreaksFor(times);
-
-var totals = calculateTotalWorkAndBreak(dictionary);
-
-var workingTime = mapMilliSecondsToHoursAndMinutes(totals.work);
-var breakTime = mapMilliSecondsToHoursAndMinutes(totals.break);
-
-console.log("Worked this week for: ")
-console.log(workingTime)
-console.log("Break this week for: ")
-console.log(breakTime)
 
