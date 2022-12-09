@@ -26,12 +26,12 @@ loadContentWith = (dates) => {
     var times = [];
     for (let i = 0; i < stringDates.length; i++) {
         var key = stringDates[i];
-        var x = $('div[data-test-id="' + key + '"]').find('span[data-test-id="day-summary"]').first().text();
-        times.push(x);
-    }
-    var todayTime = $('div[data-test-id=today-cell]').find('span[data-test-id="day-summary"]').first();
-    if (todayTime) {
-        times.push(todayTime.text());
+        if (key === mapDateToString(new Date())) {
+            times.push($('div[data-test-id=today-cell]').find('span[data-test-id="day-summary"]').first().text());
+        }
+        else {
+            times.push($('div[data-test-id="' + key + '"]').find('span[data-test-id="day-summary"]').first().text());
+        }
     }
     return times;
 }
@@ -84,82 +84,102 @@ mapMilliSecondsToHoursAndMinutes = (sum) => {
     return { "hours": hours, "minutes": minutes, "seconds": seconds };
 }
 
+function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return weekNo;
+}
+
 insertIntoPage = (workTime) => {
+    var weekNumber = getWeekNumber(new Date());
+    var now = workTime.filter(x => x.weekNumber === weekNumber)[0];
+
     $(".AttendancePage-module__header___cbl1Z").find("#myAttendance").remove();
     $(".AttendancePage-module__header___cbl1Z").append(`
     <div id="myAttendance" class="WidgetArea-module__widgetsWrapper___TVJCo" style="margin-top: 20px;">
     <div class="Widget-module__wrapper___xmbJe">
-        <div class="WidgetHead-module__name___A2zdl">Arbeitszeitkonto</div>
+        <div class="WidgetHead-module__name___A2zdl">Monatskonto</div>
         <div class="WidgetBody-module__wrapper___dqSWy">
             <div class="AttendanceBalanceWidget-module__left___XChX0">
-                <div class="WidgetItem-module__wrapper___zgWan">
-                    <div class="WidgetItemTitle-module__title___JvxYv"><span>53h10</span></div>
-                    <div class="WidgetItemSubtitle-module__subtitle___LLkNS"><span>Erfasst</span></div>
-                </div>
-                <div class="WidgetItem-module__wrapper___zgWan">
-                    <div class="WidgetItemTitle-module__title___JvxYv"><span>53h10</span></div>
-                    <div class="WidgetItemSubtitle-module__subtitle___LLkNS"><span>Erfasst</span></div>
-                </div>
-                <div class="WidgetItem-module__wrapper___zgWan">
-                    <div class="WidgetItemTitle-module__title___JvxYv"><span>53h10</span></div>
-                    <div class="WidgetItemSubtitle-module__subtitle___LLkNS"><span>Erfasst</span></div>
-                </div>
+                ${workTime.map(x => {
+        return `<div class="WidgetItem-module__wrapper___zgWan">
+                    <div class="WidgetItemTitle-module__title___JvxYv"><span>${x.workedHours.minutes > 0 ? x.workedHours.hours : "-"}h${x.workedHours.minutes > 0 ? x.workedHours.minutes % 60 : "-"}</span></div>
+                    <div class="WidgetItemSubtitle-module__subtitle___LLkNS"><span>KW${x.weekNumber.toString()}</span></div>
+                </div>`
+    }).join("")
+        }
             </div>
         </div>
     </div>
-    <div data-test-id="widget-work-schedule-container" class="Widget-module__wrapper___xmbJe">
-        <div class="WidgetHead-module__name___A2zdl">Arbeitstage &amp; Wochenstunden</div>
+    <div class="Widget-module__wrapper___xmbJe">
+        <div class="WidgetHead-module__name___A2zdl">Wochenfortschritt</div>
         <div class="WidgetBody-module__wrapper___dqSWy">
-            <div class="WorkScheduleWidget-module__left____3U8L">
-                <div class="WidgetItem-module__wrapper___zgWan">
-                    <div class="WidgetItemTitle-module__title___JvxYv"><span data-test-id="widget-work-schedule-days">5
-                            Tage</span></div>
-                    <div class="WidgetItemSubtitle-module__subtitle___LLkNS"><span
-                            data-test-id="widget-work-schedule-weekdays">Mo, Di, Mi, Do, Fr</span></div>
-                </div>
-                <div class="WidgetItem-module__wrapper___zgWan">
-                    <div class="WidgetItemTitle-module__title___JvxYv"><span
-                            data-test-id="widget-work-schedule-hours">20h</span></div>
-                    <div class="WidgetItemSubtitle-module__subtitle___LLkNS"><span>Wochenstunden</span></div>
-                </div>
-            </div>
-            <div class="WorkScheduleWidget-module__ellipsis___bBt7v">
-                <div class="DropdownMenu-module__2p2rUa8Y__v3-0-17">
-                    <div data-test-id="widget-work-schedule-menu" data-action-name="widget-work-schedule-menu"
-                        class="DropdownMenuToggle-module__3kJdGE4x__v3-0-17"><i class="far fa-ellipsis-h"
-                            style="font-size: 16px; color: var(--icon-subdued);"></i></div>
-                </div>
+            <div style="width: 100%; height: 100%; border: 1px solid #dee2e6; border-radius: 4px; overflow: hidden">
+                <div style="width: ${now ? (now.workedHours.minutes / 1200) * 100 : 0}%; height: 100%; background: #49b544;">
             </div>
         </div>
     </div>
 </div>`);
 }
 
-var prevWorkingTime;
-var prevBreakTime;
-
-doSomething = () => {
-    var dateArray = getDatesInWeek(new Date());
-
-    var times = loadContentWith(dateArray);
-
+load = (dates) => {
+    var times = loadContentWith(dates);
     var dictionary = calculateWorkAndBreaksFor(times);
-
     var totals = calculateTotalWorkAndBreak(dictionary);
-
     var workingTime = mapMilliSecondsToHoursAndMinutes(totals.work);
     var breakTime = mapMilliSecondsToHoursAndMinutes(totals.break);
 
-    if (prevWorkingTime && (prevWorkingTime.hours === workingTime.hours && prevWorkingTime.minuntes === workingTime.minutes))
-        return;
+    return { "work": workingTime, "break": breakTime };
+}
 
-    if (prevBreakTime && (prevBreakTime.hours === breakTime.hours && prevBreakTime.minuntes === breakTime.minutes))
-        return;
+var prevMonthlyDatesPerWeek;
 
-    prevWorkingTime = workingTime;
-    prevBreakTime = breakTime;
+doSomething = () => {
+    var monthlyDatesPerWeek = [];
+    var currentDate = new Date();
+    var i = 1;
+    var firstWeekInMonth = getDatesInWeek(new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), 1));
+    var hours = load(firstWeekInMonth);
+    monthlyDatesPerWeek.push({
+        dates: firstWeekInMonth,
+        weekNumber: getWeekNumber(new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), 1)),
+        workedHours: hours.work,
+        breakHours: hours.break
+    });
+    while (currentDate.getMonth() == new Date().getMonth()) {
+        var date = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), 1 + (i * 7));
+        hours = load(getDatesInWeek(date))
+        monthlyDatesPerWeek.push({
+            dates: getDatesInWeek(date),
+            weekNumber: getWeekNumber(date),
+            workedHours: hours.work,
+            breakHours: hours.break
+        });
+        i++;
+        currentDate = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), 1 + (i * 7));
+    }
 
-    insertIntoPage(workingTime);
+    var rebuild = true;
+    if (prevMonthlyDatesPerWeek) {
+        for (var x = 0; x < prevMonthlyDatesPerWeek.length; x++) {
+            var prevwork = prevMonthlyDatesPerWeek[x].workedHours;
+            var prevbreaks = prevMonthlyDatesPerWeek[x].breakHours;
+            var work = prevMonthlyDatesPerWeek[x].workedHours;
+            var breaks = prevMonthlyDatesPerWeek[x].breakHours;
+
+            if (prevwork.hours === work.hours && prevwork.minutes === work.minutes && prevbreaks.hours === breaks.hours && prevbreaks.minutes === breaks.minutes) {
+                rebuild = false;
+                break;
+            }
+        }
+    }
+
+    if (rebuild || $(".AttendancePage-module__header___cbl1Z").find("#myAttendance").length === 0) {
+        prevMonthlyDatesPerWeek = monthlyDatesPerWeek;
+        insertIntoPage(monthlyDatesPerWeek);
+    }
 }
 
 setInterval(doSomething, 1000);
